@@ -166,7 +166,7 @@
           html += (
             '<div class="breadcrumb">' +
               '<div class="breadcrumbs-path"><strong>Path:</strong> ' + this.breadcrumb.join(' → ') + '</div>' +
-              '\x3Cdiv class=\"actions-right\"\x3E' +
+              '<div class=\"actions-right\">' +
                 '<button class=\"back-btn\" onclick=\"tool.restart()\">Start Over</button>' +
               '</div>' +
             '</div>'
@@ -260,12 +260,10 @@
         win.document.close();
       }
 
-            }
-
       copyDocLinks() {
         const docs = this.getDocsForOutcome(this.currentStep);
         if (!docs.length) return;
-        const text = docs.map(d => d.title + ': ' + d.href).join('\\n');
+        const text = docs.map(d => d.title + ': ' + d.href).join('\n');
         navigator.clipboard.writeText(text).then(() => alert('Document links copied to clipboard.'));
       }
 
@@ -405,4 +403,5 @@
   </script>
 </body>
 </html>
+
 
