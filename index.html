@@ -280,7 +280,7 @@
             <div class="box"><strong>Documents (${docs.length})</strong>
               ${docs.length ? `<ul>${docs.map(d => `<li>${d.title} – <span class="muted">${d.type}</span><br><a href='${d.href}' target='_blank'>${d.href}</a></li>`).join('')}</ul>` : 'No documents linked for this outcome yet.'}
             </div>
-            <script>window.print()</script>
+            <script>window.print()<\/script>
           </body></html>`;
         win.document.write(html);
         win.document.close();
@@ -438,4 +438,6 @@
     const tool = new ZoningDecisionTool();
   </script>
 </body>
+</html>
+
 </html>
