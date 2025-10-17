@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Permitting Pathway</title>
+  <!-- Optional: icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #93c5fd 0%, #7dd3fc 100%);
+      min-height: 100vh; padding: 20px; color: #333;
+    }
+    .container { max-width: 980px; margin: 0 auto; }
+    .header { background: white; border-radius: 16px; padding: 32px 40px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,.1); margin-bottom: 24px; }
+    .header h1 { font-size: 2.2rem; color: #1f4ed8; margin-bottom: 8px; font-weight: 800; letter-spacing: -0.02em; }
+    .header p { font-size: 1.05rem; color: #555; }
+
+    .content { background: white; border-radius: 16px; padding: 32px 40px; box-shadow: 0 10px 40px rgba(0,0,0,.1); min-height: 420px; }
+
+    .breadcrumb { background: #f0f9ff; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: .95rem; color: #555; border-left: 4px solid #3b82f6; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .breadcrumb strong { color: #1f4ed8; margin-right: 8px; }
+    .breadcrumbs-path { display: inline-block; }
+    .actions-right { display: flex; gap: 8px; }
+
+    .question-container { animation: fadeIn .35s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .question { font-size: 1.4rem; font-weight: 700; color: #0f172a; margin-bottom: 14px; line-height: 1.4; letter-spacing: -0.01em; }
+    .code-section { display: inline-block; background: #1f4ed8; color: white; padding: 4px 12px; border-radius: 6px; font-size: .82rem; font-weight: 600; margin-left: 10px; vertical-align: middle; }
+
+    .context { background: #fff3cd; border-left: 4px solid #ffc107; padding: 14px 16px; border-radius: 8px; margin-bottom: 22px; color: #856404; font-size: .96rem; }
+
+    .button-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 18px; }
+    button { background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); border: none; padding: 14px 18px; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, background .2s ease; color: white; text-align: center; box-shadow: 0 4px 12px rgba(72, 187, 120, .28); }
+    button:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(72,187,120,.4); }
+    button.back-btn { background: #f3f4f6; border: 2px solid #d1d5db; color: #374151; box-shadow: none; font-weight: 700; }
+    button.back-btn:hover { background: #e5e7eb; border-color: #9ca3af; }
+    .restart-btn { background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); box-shadow: 0 4px 12px rgba(59,130,246,.3); }
+
+    /* Result */
+    .result { animation: fadeIn .35s ease; }
+    .result h3 { font-size: 1.6rem; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .result p { font-size: 1.05rem; line-height: 1.7; color: #334155; background: #f0f9ff; padding: 18px; border-radius: 12px; border-left: 4px solid #3b82f6; }
+
+    .doc-list { margin-top: 18px; }
+    .doc-list h4 { font-size: 1.05rem; color: #0f172a; margin: 16px 0 10px; }
+    .doc-item { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 10px; }
+    .doc-meta { display: flex; flex-direction: column; gap: 4px; }
+    .doc-title { font-weight: 700; color: #111827; }
+    .doc-sub { font-size: .9rem; color: #6b7280; }
+
+    .pill { display: inline-block; font-size: .75rem; padding: 4px 8px; border-radius: 999px; border: 1px solid #e5e7eb; color: #334155; }
+
+    .result-controls { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    .muted { opacity: .9; }
+
+    @media (max-width: 768px) {
+      .header h1 { font-size: 1.9rem; }
+      .content { padding: 22px; }
+      .question { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🏛️ Permitting Pathway</h1>
+      <p>Interactive guide to determine required permits, reviews, and documents</p>
+    </div>
+
+    <div class="content" id="content"><!-- dynamic --></div>
+  </div>
+
+  <!-- Optional: client-side zipping for "Download Packet"; safe to remove if not needed -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
+  <script>
+    class ZoningDecisionTool {
+      constructor() {
+        this.currentStep = 'start';
+        this.breadcrumb = []; // human-readable selections
+        this.stepHistory = ['start']; // internal step ids
+        this.currentStepNumber = 0;
+
+        // 🔗 Central registry mapping terminal/result steps to documents
+        // Replace the sample hrefs with your live files (local /docs/*.pdf, S3, City site, etc.)
+        this.documentsRegistry = {
+          permitted_no_spar: [
+            { title: 'Building Permit Application', href: '/docs/building-permit-application.pdf', type: 'form', note: 'Submit to Building Division after plans are ready' },
+            { title: 'Submittal Checklist – Residential', href: '/docs/res-submittal-checklist.pdf', type: 'checklist' }
+          ],
+          admin_spar: [
+            { title: 'Administrative SPAR Application', href: '/docs/admin-spar-application.pdf', type: 'form' },
+            { title: 'SPAR Findings Worksheet', href: '/docs/spar-findings-worksheet.pdf', type: 'worksheet' },
+            { title: 'Public Noticing Guide (FYI)', href: '/docs/noticing-guide.pdf', type: 'guide' }
+          ],
+          pc_spar: [
+            { title: 'Planning Commission SPAR Application', href: '/docs/pc-spar-application.pdf', type: 'form' },
+            { title: 'Submittal Checklist – SPAR', href: '/docs/spar-submittal-checklist.pdf', type: 'checklist' },
+            { title: 'CEQA Initial Study Checklist (if applicable)', href: '/docs/ceqa-initial-study-checklist.pdf', type: 'form' }
+          ],
+          minor_cup: [
+            { title: 'Minor Use Permit Application', href: '/docs/minor-use-permit.pdf', type: 'form' },
+            { title: 'Findings Worksheet – CUP', href: '/docs/cup-findings-worksheet.pdf', type: 'worksheet' }
+          ],
+          standard_cup: [
+            { title: 'Conditional Use Permit Application', href: '/docs/cup-application.pdf', type: 'form' },
+            { title: 'Public Hearing Noticing Guide', href: '/docs/noticing-guide.pdf', type: 'guide' },
+            { title: 'Submittal Checklist – CUP', href: '/docs/cup-submittal-checklist.pdf', type: 'checklist' }
+          ],
+          admin_variance: [
+            { title: 'Administrative Variance Application', href: '/docs/admin-variance-application.pdf', type: 'form' },
+            { title: 'Variance Findings Worksheet', href: '/docs/variance-findings-worksheet.pdf', type: 'worksheet' }
+          ],
+          pc_variance: [
+            { title: 'Variance Application – PC', href: '/docs/pc-variance-application.pdf', type: 'form' },
+            { title: 'Submittal Checklist – Variance', href: '/docs/variance-submittal-checklist.pdf', type: 'checklist' }
+          ],
+          business_license: [
+            { title: 'Business License Application', href: '/docs/business-license.pdf', type: 'form' },
+            { title: 'Zoning Clearance Form', href: '/docs/zoning-clearance.pdf', type: 'form' }
+          ],
+          home_occupation: [
+            { title: 'Home Occupation Permit', href: '/docs/home-occupation-permit.pdf', type: 'form' },
+            { title: 'Section 7.060 Standards (Excerpt)', href: '/docs/sec-7-060-standards.pdf', type: 'standards' }
+          ],
+          str_permit: [
+            { title: 'STR Permit Application', href: '/docs/str-permit.pdf', type: 'form' },
+            { title: 'TOT Certificate Application', href: '/docs/tot-certificate.pdf', type: 'form' }
+          ],
+          state_housing: [
+            { title: 'SB 9 Urban Lot Split/Two-Unit App', href: '/docs/sb9-application.pdf', type: 'form' },
+            { title: 'Objective Design Standards (ODS)', href: '/docs/objective-design-standards.pdf', type: 'standards' }
+          ],
+          other_ministerial: [
+            { title: 'Zoning Compliance Verification', href: '/docs/zoning-compliance-verification.pdf', type: 'form' }
+          ],
+          specific_regs_compliant: [
+            { title: 'Chapter 7 – Specific Use Regs (Excerpt)', href: '/docs/ch7-specific-use-regs.pdf', type: 'standards' }
+          ],
+          zoning_compliance_required: [
+            { title: 'Zoning Compliance Worksheet', href: '/docs/zoning-compliance-worksheet.pdf', type: 'worksheet' },
+            { title: 'Chapter 7 – Specific Use Regs (Excerpt)', href: '/docs/ch7-specific-use-regs.pdf', type: 'standards' }
+          ],
+          not_permitted: [
+            { title: 'General Plan / Zoning Amendment Guide', href: '/docs/gp-zoning-amendment-guide.pdf', type: 'guide' },
+            { title: 'Pre-Application Meeting Request', href: '/docs/preapp-request.pdf', type: 'form' }
+          ]
+        };
+
+        this.init();
+      }
+
+      init() { this.renderStep(); }
+
+      renderStep() {
+        const content = document.getElementById('content');
+        const stepData = this.getStepData(this.currentStep);
+
+        let html = '';
+
+        if (this.breadcrumb.length > 0) {
+          html += `
+            <div class="breadcrumb">
+              <div class="breadcrumbs-path"><strong>Path:</strong> ${this.breadcrumb.join(' → ')}</div>
+              <div class="actions-right">
+                <button class="back-btn" onclick="tool.exportSummary()">Export Summary</button>
+                <button class="back-btn" onclick="tool.restart()">Start Over</button>
+              </div>
+            </div>`;
+        }
+
+        if (stepData.type === 'question') {
+          html += `
+            <div class="question-container">
+              <div class="question">
+                ${stepData.question}
+                ${stepData.codeSection ? `<span class="code-section">${stepData.codeSection}</span>` : ''}
+              </div>
+              ${stepData.context ? `<div class="context">${stepData.context}</div>` : ''}
+              <div class="button-group">
+                ${stepData.options.map(option => `<button onclick="tool.handleAnswer('${option.value}')">${option.text}</button>`).join('')}
+              </div>
+              ${this.stepHistory.length > 1 ? `<div style="margin-top: 22px; padding-top: 16px; border-top: 1px solid #e5e7eb;"><button class="back-btn" onclick="tool.goBack()">← Back</button></div>` : ''}
+            </div>`;
+        } else if (stepData.type === 'result') {
+          const docs = this.documentsRegistry[this.currentStep] || [];
+
+          html += `
+            <div class="result">
+              <h3>🎯 ${stepData.title} ${stepData.codeSection ? `<span class="code-section">${stepData.codeSection}</span>` : ''}</h3>
+              <p>${stepData.description}</p>
+
+              <div class="result-controls">
+                <button class="restart-btn" onclick="tool.restart()">🔄 Start Over</button>
+                ${this.stepHistory.length > 1 ? `<button class="back-btn" onclick="tool.goBack()">← Back</button>` : ''}
+                ${docs.length ? `<button onclick="tool.downloadPacket()">⬇️ Download Packet (.zip)</button>` : ''}
+                ${docs.length ? `<button class="back-btn" onclick="tool.copyDocLinks()">Copy Links</button>` : ''}
+              </div>
+
+              ${docs.length ? `
+                <div class="doc-list">
+                  <h4>📎 Required / Helpful Documents</h4>
+                  ${docs.map(d => `
+                    <div class="doc-item">
+                      <div class="doc-meta">
+                        <div class="doc-title">${d.title}</div>
+                        <div class="doc-sub"><span class="pill">${d.type}</span> ${d.note ? `<span class="muted">• ${d.note}</span>` : ''}</div>
+                      </div>
+                      <div>
+                        <a href="${d.href}" target="_blank" rel="noopener"><button>Open</button></a>
+                      </div>
+                    </div>`).join('')}
+                </div>` : `
+                <div class="doc-list">
+                  <h4>📎 Documents</h4>
+                  <div class="doc-item"><div class="doc-meta"><div class="doc-title">No linked documents for this outcome yet.</div><div class="doc-sub">Add entries for "${this.currentStep}" in <code>documentsRegistry</code>.</div></div></div>
+                </div>`}
+            </div>`;
+        }
+
+        content.innerHTML = html;
+      }
+
+      async handleAnswer(value) {
+        const stepData = this.getStepData(this.currentStep);
+        const sel = stepData.options?.find(opt => opt.value === value);
+        if (sel) {
+          this.breadcrumb.push(sel.text);
+          this.currentStep = sel.next;
+          this.stepHistory.push(this.currentStep);
+          this.currentStepNumber++;
+          this.renderStep();
+        }
+      }
+
+      goBack() {
+        if (this.stepHistory.length > 1) {
+          this.stepHistory.pop();
+          this.currentStep = this.stepHistory[this.stepHistory.length - 1];
+          this.breadcrumb.pop();
+          this.currentStepNumber = Math.max(0, this.currentStepNumber - 1);
+          this.renderStep();
+        }
+      }
+
+      restart() {
+        this.currentStep = 'start';
+        this.breadcrumb = [];
+        this.stepHistory = ['start'];
+        this.currentStepNumber = 0;
+        this.renderStep();
+      }
+
+      // 🧾 Export a one-page printable summary (decision path + outcome)
+      exportSummary() {
+        const stepData = this.getStepData(this.currentStep);
+        const docs = this.documentsRegistry[this.currentStep] || [];
+        const win = window.open('', '_blank');
+        const html = `
+          <html><head><title>Permitting Pathway Summary</title>
+          <style>
+            body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:24px;color:#111827}
+            h1{font-size:20px;margin:0 0 12px}
+            .muted{color:#6b7280}
+            .box{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:12px 0}
+            .pill{display:inline-block;border:1px solid #e5e7eb;border-radius:999px;padding:2px 8px;font-size:12px;margin-left:8px;color:#374151}
+            ul{margin:8px 0 0 20px}
+          </style></head>
+          <body>
+            <h1>Permitting Pathway – Decision Summary</h1>
+            <div class="box"><strong>Path Chosen:</strong><br/>${this.breadcrumb.join(' → ') || '—'}</div>
+            <div class="box"><strong>Outcome:</strong> ${stepData.title || '—'} ${stepData.codeSection ? `<span class="pill">${stepData.codeSection}</span>` : ''}<br><span class="muted">${stepData.description || ''}</span></div>
+            <div class="box"><strong>Documents (${docs.length})</strong>
+              ${docs.length ? `<ul>${docs.map(d => `<li>${d.title} – <span class="muted">${d.type}</span><br><a href='${d.href}' target='_blank'>${d.href}</a></li>`).join('')}</ul>` : 'No documents linked for this outcome yet.'}
+            </div>
+            <script>window.print()</script>
+          </body></html>`;
+        win.document.write(html);
+        win.document.close();
+      }
+
+      // 📦 Bundle all linked docs for this result into a single ZIP
+      async downloadPacket() {
+        const docs = this.documentsRegistry[this.currentStep] || [];
+        if (!docs.length) return;
+        if (!window.JSZip) { alert('ZIP library not loaded. Remove the button or include JSZip.'); return; }
+
+        const zip = new JSZip();
+        const folder = zip.folder('permitting-packet');
+        const failures = [];
+
+        // Try to fetch files (requires CORS-enabled sources). You can swap to server-side bundling if needed.
+        await Promise.all(docs.map(async (d, idx) => {
+          try {
+            const res = await fetch(d.href, { mode: 'cors' });
+            if (!res.ok) throw new Error(res.statusText);
+            const blob = await res.blob();
+            const nameFromUrl = (new URL(d.href, window.location.href)).pathname.split('/').pop() || `doc-${idx+1}.pdf`;
+            folder.file(nameFromUrl, blob);
+          } catch (e) {
+            failures.push({ title: d.title, href: d.href, error: e.message });
+          }
+        }));
+
+        const content = await zip.generateAsync({ type: 'blob' });
+        saveAs(content, `permitting-packet-${this.currentStep}.zip`);
+
+        if (failures.length) {
+          console.warn('Some files could not be zipped due to CORS or network issues:', failures);
+          alert(`Downloaded packet with ${docs.length - failures.length} of ${docs.length} files. ${failures.length} could not be fetched (CORS). They will remain accessible via the individual links.`);
+        }
+      }
+
+      // 🔗 Copy plain URLs for quick sharing
+      copyDocLinks() {
+        const docs = this.documentsRegistry[this.currentStep] || [];
+        if (!docs.length) return;
+        const text = docs.map(d => `${d.title}: ${d.href}`).join('\n');
+        navigator.clipboard.writeText(text).then(() => alert('Document links copied to clipboard.'));
+      }
+
+      getStepData(step) {
+        const steps = {
+          'start': { type: 'question', question: 'Is the use allowed in this zone?', context: 'Check if use table shows anything other than "Not Permitted"', options: [
+            { text: 'Yes - Use is allowed in some form', value: 'check_accessory', next: 'check_accessory' },
+            { text: 'No - Shows "Not Permitted"', value: 'not_permitted', next: 'not_permitted' }
+          ]},
+
+          'not_permitted': { type: 'result', title: 'Use Not Permitted', description: 'The City\'s General Plan and zoning ordinance do not permit this use in that zone. You would need to pursue a General Plan amendment and/or zone change, which is a separate legislative process.' },
+
+          'check_accessory': { type: 'question', question: 'Is this an accessory use?', context: 'Does the use table show "A" (Accessory use)?', options: [
+            { text: 'Yes - Accessory use', value: 'accessory_check', next: 'accessory_check' },
+            { text: 'No - Not accessory', value: 'check_standards', next: 'check_standards' }
+          ]},
+
+          'accessory_check': { type: 'question', question: 'Can use be demonstrated as secondary to primary use?', options: [
+            { text: 'Yes - Secondary to primary use', value: 'administrative', next: 'administrative' },
+            { text: 'No - Cannot demonstrate secondary relationship', value: 'not_permitted', next: 'not_permitted' }
+          ]},
+
+          'check_standards': { type: 'question', question: 'Does development meet ALL zoning standards?', context: 'Setbacks, height, parking, lot coverage, etc.', options: [
+            { text: 'Yes - Meets all standards', value: 'check_use_type', next: 'check_use_type' },
+            { text: 'No - Does not meet standards', value: 'check_variance', next: 'check_variance' }
+          ]},
+
+          'check_variance': { type: 'question', question: 'Are there exceptional property conditions?', context: 'Exceptional narrowness, shallowness, or unusual shape', options: [
+            { text: 'Yes - Exceptional property conditions', value: 'variance', next: 'variance' },
+            { text: 'No - Standard property conditions', value: 'not_permitted', next: 'not_permitted' }
+          ]},
+
+          'check_use_type': { type: 'question', question: 'What does the use table show?', options: [
+            { text: 'P - Permitted', value: 'check_spar', next: 'check_spar' },
+            { text: 'CUP - Conditional Use Permit', value: 'cup', next: 'cup' },
+            { text: 'S - Specific Use Regulations', value: 'check_chapter7', next: 'check_chapter7' }
+          ]},
+
+          'check_chapter7': { type: 'question', question: 'Does the use meet all standards outlined in Chapter 7?', context: 'Check the specific use regulations referenced in the use table. Use the Zoning Lookup Tool to find detailed Chapter 7 requirements for your specific use.', options: [
+            { text: 'Yes - Meets all Chapter 7 standards', value: 'specific_regs_compliant', next: 'specific_regs_compliant' },
+            { text: 'No - Does not meet standards', value: 'zoning_compliance_required', next: 'zoning_compliance_required' }
+          ]},
+
+          'check_spar': { type: 'question', question: 'Does this project require SPAR?', codeSection: 'Section 24.050', context: 'Is use specifically listed in Section 24.050.A? (Public buildings, schools, hospitals, churches, clubs, motels, offices, commercial, industrial, mobile home parks, parking lots, utilities, multi-family, subdivision resulting in 5 or more parcels)', options: [
+            { text: 'Yes - Listed in 24.050.A', value: 'spar_type', next: 'spar_type' },
+            { text: 'No - Not listed', value: 'permitted_no_spar', next: 'permitted_no_spar' }
+          ]},
+
+          'permitted_no_spar': { type: 'result', title: 'Permitted by Right - No Planning Permit Required', description: 'This use is permitted by right and does not require SPAR or other planning permits. You may proceed with building permits or other ministerial approvals as needed.' },
+
+          'spar_type': { type: 'question', question: 'What type of SPAR is required?', codeSection: 'Section 24.050', options: [
+            { text: 'Nonproduction residential in approved subdivision (≥5 lots)', value: 'admin_spar', next: 'admin_spar' },
+            { text: 'Residential development <5 units', value: 'admin_spar', next: 'admin_spar' },
+            { text: 'Minor addition to commercial/industrial/office', value: 'admin_spar_option', next: 'admin_spar_option' },
+            { text: 'Other SPAR-required project', value: 'pc_spar', next: 'pc_spar' }
+          ]},
+
+          'admin_spar_option': { type: 'question', question: 'Does Director choose to handle administratively?', options: [
+            { text: 'Yes - Administrative review', value: 'admin_spar', next: 'admin_spar' },
+            { text: 'No - Planning Commission review', value: 'pc_spar', next: 'pc_spar' }
+          ]},
+
+          'admin_spar': { type: 'result', title: 'Administrative SPAR Required', codeSection: 'Section 24.050', description: 'This project requires Site Plan and Architectural Review by the Director. This is a discretionary review with required findings, but no public hearing is required.' },
+
+          'pc_spar': { type: 'result', title: 'Planning Commission SPAR Required', codeSection: 'Section 24.050', description: 'This project requires Site Plan and Architectural Review by the Planning Commission. This involves a public hearing with discretionary findings and public notice requirements.' },
+
+          'cup': { type: 'question', question: 'What type of Conditional Use Permit is needed?', codeSection: 'Section 24.060', options: [
+            { text: 'Minor modification to existing CUP', value: 'minor_cup', next: 'minor_cup' },
+            { text: 'Less intensive use than previous occupant', value: 'minor_cup', next: 'minor_cup' },
+            { text: 'Dwelling group (multiple detached units)', value: 'minor_cup', next: 'minor_cup' },
+            { text: 'Tasting room', value: 'minor_cup', next: 'minor_cup' },
+            { text: 'Single-family home in commercial zone', value: 'minor_cup', next: 'minor_cup' },
+            { text: 'Minor telecommunications facility', value: 'minor_cup', next: 'minor_cup' },
+            { text: 'Recently expired CUP (within 24 months)', value: 'minor_cup', next: 'minor_cup' },
+            { text: 'Standard conditional use', value: 'standard_cup', next: 'standard_cup' }
+          ]},
+
+          'minor_cup': { type: 'result', title: 'Minor Use Permit Required', codeSection: 'Section 24.060', description: 'This project qualifies for a Minor Use Permit, which can be approved administratively by the Director. Same findings as standard CUP but no public hearing required.' },
+
+          'standard_cup': { type: 'result', title: 'Standard Conditional Use Permit Required', codeSection: 'Section 24.060', description: 'This project requires a standard Conditional Use Permit reviewed by the Planning Commission. This involves a public hearing with required findings and public notice requirements.' },
+
+          'variance': { type: 'question', question: 'What type of variance review?', codeSection: 'Section 24.070', context: 'All required findings must be met: peculiar property conditions, hardship not created by owner, necessary for substantial property rights, no detriment to adjacent properties', options: [
+            { text: 'Director chooses administrative review', value: 'admin_variance', next: 'admin_variance' },
+            { text: 'Planning Commission review', value: 'pc_variance', next: 'pc_variance' }
+          ]},
+
+          'admin_variance': { type: 'result', title: 'Administrative Variance', codeSection: 'Section 24.070', description: 'This variance can be reviewed administratively by the Director. All variance findings must still be met, but no public hearing is required.' },
+
+          'pc_variance': { type: 'result', title: 'Planning Commission Variance', codeSection: 'Section 24.070', description: 'This variance requires Planning Commission review with a public hearing. All required variance findings must be met with substantial evidence.' },
+
+          'specific_regs_compliant': { type: 'result', title: 'Specific Use Regulations - Compliant', description: 'This use meets the specific use regulations in Chapter 7. Since it complies with all standards, no additional planning permits are required. You may proceed with building permits or other ministerial approvals as needed.' },
+
+          'zoning_compliance_required': { type: 'result', title: 'Zoning Compliance Required First', description: 'This use must comply with specific use regulations in Chapter 7 before proceeding. Use the Zoning Lookup Tool to find the detailed requirements for your specific use, then work with planning staff to achieve compliance.' },
+
+          'administrative': { type: 'question', question: 'What type of administrative permit?', codeSection: 'Section 24.030', options: [
+            { text: 'Business license', value: 'business_license', next: 'business_license' },
+            { text: 'Home occupation permit', value: 'home_occupation', next: 'home_occupation' },
+            { text: 'Short-term vacation rental', value: 'str_permit', next: 'str_permit' },
+            { text: 'State housing law (SB 9, etc.)', value: 'state_housing', next: 'state_housing' },
+            { text: 'Other ministerial permit', value: 'other_ministerial', next: 'other_ministerial' }
+          ]},
+
+          'business_license': { type: 'result', title: 'Business License Required', description: 'Business license review process (handled by Finance Department). Zoning compliance must be verified first.' },
+          'home_occupation': { type: 'result', title: 'Home Occupation Permit Required', description: 'Home occupation permit review process. Must meet Section 7.060 compliance standards.' },
+          'str_permit': { type: 'result', title: 'Short-Term Vacation Rental Permit', description: 'STR permit review process. Must meet Section 7.110 requirements including business license and transient occupancy tax certificate.' },
+          'state_housing': { type: 'result', title: 'State Housing Law - Ministerial Approval', description: 'Ministerial approval per state law (SB 9 or other qualifying legislation). Must meet objective standards as defined by state law.' },
+          'other_ministerial': { type: 'result', title: 'Other Ministerial Permit', description: 'Administrative determination based on objective standards. No discretionary findings required.' }
+        };
+        return steps[step] || steps['start'];
+      }
+    }
+
+    const tool = new ZoningDecisionTool();
+  </script>
+</body>
+</html>
