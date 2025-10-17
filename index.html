@@ -291,8 +291,7 @@
       copyDocLinks() {
         const docs = this.getDocsForOutcome(this.currentStep);
         if (!docs.length) return;
-        const text = docs.map(d => d.title + ': ' + d.href).join('
-');
+        const text = docs.map(d => d.title + ': ' + d.href).join('\\n');
         navigator.clipboard.writeText(text).then(() => alert('Document links copied to clipboard.'));
       }
 
