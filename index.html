@@ -77,8 +77,6 @@
   </div>
 
   <!-- Optional: client-side zipping for "Download Packet"; safe to remove if not needed -->
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 
   <script>
     // surface JS errors in the UI so we don't stare at a blank box
@@ -168,9 +166,8 @@
           html += (
             '<div class="breadcrumb">' +
               '<div class="breadcrumbs-path"><strong>Path:</strong> ' + this.breadcrumb.join(' → ') + '</div>' +
-              '<div class="actions-right">' +
-                '<button class="back-btn" onclick="tool.exportSummary()">Export Summary</button>' +
-                '<button class="back-btn" onclick="tool.restart()">Start Over</button>' +
+              '\x3Cdiv class=\"actions-right\"\x3E' +
+                '<button class=\"back-btn\" onclick=\"tool.restart()\">Start Over</button>' +
               '</div>' +
             '</div>'
           );
@@ -196,8 +193,8 @@
             '<div class="result-controls">' +
               '<button class="restart-btn" onclick="tool.restart()">🔄 Start Over</button>' +
               (this.stepHistory.length > 1 ? '<button class="back-btn" onclick="tool.goBack()">← Back</button>' : '') +
-              (docs.length ? '<button onclick="tool.downloadPacket()">⬇️ Download Packet (.zip)</button>' : '') +
               (docs.length ? '<button class="back-btn" onclick="tool.copyDocLinks()">Copy Links</button>' : '') +
+              (docs.length ? '<button class="back-btn" onclick="tool.exportSummary()">Export Summary</button>' : '') +
             '</div>'
           );
           html += (
@@ -263,30 +260,7 @@
         win.document.close();
       }
 
-      async downloadPacket() {
-        const docs = this.getDocsForOutcome(this.currentStep);
-        if (!docs.length) return;
-        if (!window.JSZip) { alert('ZIP library not loaded. Remove the button or include JSZip.'); return; }
-        const zip = new JSZip();
-        const folder = zip.folder('permitting-packet');
-        const failures = [];
-        await Promise.all(docs.map(async (d, idx) => {
-          try {
-            const res = await fetch(d.href, { mode: 'cors' });
-            if (!res.ok) throw new Error(res.statusText);
-            const blob = await res.blob();
-            const pathname = (new URL(d.href, window.location.href)).pathname;
-            const base = pathname.split('/').filter(Boolean).pop() || ('doc-' + (idx+1) + '.pdf');
-            folder.file(base, blob);
-          } catch (e) { failures.push({ title: d.title, href: d.href, error: e.message }); }
-        }));
-        const content = await zip.generateAsync({ type: 'blob' });
-        saveAs(content, 'permitting-packet-' + this.currentStep + '.zip');
-        if (failures.length) {
-          console.warn('Some files could not be zipped due to CORS or network issues:', failures);
-          alert('Downloaded packet with ' + (docs.length - failures.length) + ' of ' + docs.length + ' files. Some files could not be fetched (CORS). They remain available via individual links.');
-        }
-      }
+            }
 
       copyDocLinks() {
         const docs = this.getDocsForOutcome(this.currentStep);
@@ -431,5 +405,4 @@
   </script>
 </body>
 </html>
-
 
