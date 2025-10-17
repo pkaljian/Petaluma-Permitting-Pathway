@@ -88,7 +88,6 @@
         this.stepHistory = ['start'];
         this.currentStepNumber = 0;
 
-        // Global/common docs (maintained via city site so links stay evergreen)
         this.commonDocs = {
           generalApp: { title: 'General Application', href: 'https://cityofpetaluma.org/documents/planning-general-app/', type: 'form', note: 'Required for all CUPs (Minor & Standard)' },
           costRecovery: { title: 'Cost Recovery Form', href: 'https://cityofpetaluma.org/documents/cost-recovery-form/', type: 'form', note: 'Required for Standard CUP' },
@@ -97,75 +96,61 @@
           envQuestionnaire: { title: 'Environmental Impact Questionnaire', href: 'https://cityofpetaluma.org/documents/environmental-impact-questionnaire/', type: 'form' }
         };
 
-        // Outcome-specific docs (you can keep adding/refining; common docs will be auto-added)
         this.documentsRegistry = {
-          permitted_no_spar: [
-            { title: 'Building Permit Application (example)', href: '/docs/building-permit-application.pdf', type: 'form', note: 'Submit to Building Division after plans are ready' },
-            { title: 'Submittal Checklist – Residential (example)', href: '/docs/res-submittal-checklist.pdf', type: 'checklist' }
-          ],
-          admin_spar: [
-            { title: 'Administrative SPAR Application (example)', href: '/docs/admin-spar-application.pdf', type: 'form' },
-            { title: 'SPAR Findings Worksheet (example)', href: '/docs/spar-findings-worksheet.pdf', type: 'worksheet' },
-            { title: 'Public Noticing Guide (FYI, example)', href: '/docs/noticing-guide.pdf', type: 'guide' }
-          ],
-          pc_spar: [
-            { title: 'Planning Commission SPAR Application (example)', href: '/docs/pc-spar-application.pdf', type: 'form' },
-            { title: 'Submittal Checklist – SPAR (example)', href: '/docs/spar-submittal-checklist.pdf', type: 'checklist' },
-            { title: 'CEQA Initial Study Checklist (if applicable, example)', href: '/docs/ceqa-initial-study-checklist.pdf', type: 'form' }
-          ],
-          minor_cup: [
-            { title: 'Minor Use Permit Application (example)', href: '/docs/minor-use-permit.pdf', type: 'form' },
-            { title: 'Findings Worksheet – CUP (example)', href: '/docs/cup-findings-worksheet.pdf', type: 'worksheet' }
-          ],
-          standard_cup: [
-            { title: 'Conditional Use Permit Application (example)', href: '/docs/cup-application.pdf', type: 'form' },
-            { title: 'Public Hearing Noticing Guide (example)', href: '/docs/noticing-guide.pdf', type: 'guide' },
-            { title: 'Submittal Checklist – CUP (example)', href: '/docs/cup-submittal-checklist.pdf', type: 'checklist' }
-          ],
-          admin_variance: [
-            { title: 'Administrative Variance Application (example)', href: '/docs/admin-variance-application.pdf', type: 'form' },
-            { title: 'Variance Findings Worksheet (example)', href: '/docs/variance-findings-worksheet.pdf', type: 'worksheet' }
-          ],
-          pc_variance: [
-            { title: 'Variance Application – PC (example)', href: '/docs/pc-variance-application.pdf', type: 'form' },
-            { title: 'Submittal Checklist – Variance (example)', href: '/docs/variance-submittal-checklist.pdf', type: 'checklist' }
-          ],
-          business_license: [
-            { title: 'Business License Application (example)', href: '/docs/business-license.pdf', type: 'form' },
-            { title: 'Zoning Clearance Form (example)', href: '/docs/zoning-clearance.pdf', type: 'form' }
-          ],
-          home_occupation: [
-            { title: 'Home Occupation Permit (example)', href: '/docs/home-occupation-permit.pdf', type: 'form' },
-            { title: 'Section 7.060 Standards (Excerpt, example)', href: '/docs/sec-7-060-standards.pdf', type: 'standards' }
-          ],
-          str_permit: [
-            { title: 'STR Permit Application (example)', href: '/docs/str-permit.pdf', type: 'form' },
-            { title: 'TOT Certificate Application (example)', href: '/docs/tot-certificate.pdf', type: 'form' }
-          ],
-          state_housing: [
-            { title: 'SB 9 Urban Lot Split/Two-Unit App (example)', href: '/docs/sb9-application.pdf', type: 'form' },
-            { title: 'Objective Design Standards (ODS, example)', href: '/docs/objective-design-standards.pdf', type: 'standards' }
-          ],
-          other_ministerial: [
-            { title: 'Zoning Compliance Verification (example)', href: '/docs/zoning-compliance-verification.pdf', type: 'form' }
-          ],
-          specific_regs_compliant: [
-            { title: 'Chapter 7 – Specific Use Regs (Excerpt, example)', href: '/docs/ch7-specific-use-regs.pdf', type: 'standards' }
-          ],
-          zoning_compliance_required: [
-            { title: 'Zoning Compliance Worksheet (example)', href: '/docs/zoning-compliance-worksheet.pdf', type: 'worksheet' },
-            { title: 'Chapter 7 – Specific Use Regs (Excerpt, example)', href: '/docs/ch7-specific-use-regs.pdf', type: 'standards' }
-          ],
-          not_permitted: [
-            { title: 'General Plan / Zoning Amendment Guide (example)', href: '/docs/gp-zoning-amendment-guide.pdf', type: 'guide' },
-            { title: 'Pre-Application Meeting Request (example)', href: '/docs/preapp-request.pdf', type: 'form' }
-          ]
+          permitted_no_spar: [],
+          admin_spar: [],
+          pc_spar: [],
+          minor_cup: [],
+          standard_cup: [],
+          admin_variance: [],
+          pc_variance: [],
+          business_license: [],
+          home_occupation: [],
+          str_permit: [],
+          state_housing: [],
+          other_ministerial: [],
+          specific_regs_compliant: [],
+          zoning_compliance_required: [],
+          not_permitted: []
         };
 
         this.init();
       }
 
       init() { this.renderStep(); }
+
+      // --- Helpers to avoid nested template literals ---
+      buildDocItem(d) {
+        const note = d.note ? ('<span class="muted">• ' + d.note + '</span>') : '';
+        const type = d.type ? d.type : 'doc';
+        return (
+          '<div class="doc-item">' +
+            '<div class="doc-meta">' +
+              '<div class="doc-title">' + d.title + '</div>' +
+              '<div class="doc-sub"><span class="pill">' + type + '</span> ' + note + '</div>' +
+            '</div>' +
+            '<div><a href="' + d.href + '" target="_blank" rel="noopener"><button>Open</button></a></div>' +
+          '</div>'
+        );
+      }
+
+      buildDocListHTML(docs) {
+        if (!docs.length) {
+          return (
+            '<div class="doc-list">' +
+              '<h4>📎 Documents</h4>' +
+              '<div class="doc-item"><div class="doc-meta"><div class="doc-title">No linked documents for this outcome yet.</div><div class="doc-sub">Add entries for this outcome in <code>documentsRegistry</code>.</div></div></div>' +
+            '</div>'
+          );
+        }
+        const items = docs.map(d => this.buildDocItem(d)).join('');
+        return (
+          '<div class="doc-list">' +
+            '<h4>📎 Required / Helpful Documents</h4>' +
+            items +
+          '</div>'
+        );
+      }
 
       renderStep() {
         const content = document.getElementById('content');
@@ -174,63 +159,49 @@
         let html = '';
 
         if (this.breadcrumb.length > 0) {
-          html += `
-            <div class="breadcrumb">
-              <div class="breadcrumbs-path"><strong>Path:</strong> ${this.breadcrumb.join(' → ')}</div>
-              <div class="actions-right">
-                <button class="back-btn" onclick="tool.exportSummary()">Export Summary</button>
-                <button class="back-btn" onclick="tool.restart()">Start Over</button>
-              </div>
-            </div>`;
+          html += (
+            '<div class="breadcrumb">' +
+              '<div class="breadcrumbs-path"><strong>Path:</strong> ' + this.breadcrumb.join(' → ') + '</div>' +
+              '<div class="actions-right">' +
+                '<button class="back-btn" onclick="tool.exportSummary()">Export Summary</button>' +
+                '<button class="back-btn" onclick="tool.restart()">Start Over</button>' +
+              '</div>' +
+            '</div>'
+          );
         }
 
         if (stepData.type === 'question') {
-          html += `
-            <div class="question-container">
-              <div class="question">
-                ${stepData.question}
-                ${stepData.codeSection ? `<span class="code-section">${stepData.codeSection}</span>` : ''}
-              </div>
-              ${stepData.context ? `<div class="context">${stepData.context}</div>` : ''}
-              <div class="button-group">
-                ${stepData.options.map(option => `<button onclick="tool.handleAnswer('${option.value}')">${option.text}</button>`).join('')}
-              </div>
-              ${this.stepHistory.length > 1 ? `<div style="margin-top: 22px; padding-top: 16px; border-top: 1px solid #e5e7eb;"><button class="back-btn" onclick="tool.goBack()">← Back</button></div>` : ''}
-            </div>`;
+          const ctx = stepData.context ? ('<div class="context">' + stepData.context + '</div>') : '';
+          const code = stepData.codeSection ? ('<span class="code-section">' + stepData.codeSection + '</span>') : '';
+          const buttons = stepData.options.map(o => '<button onclick="tool.handleAnswer(\'' + o.value + '\')">' + o.text + '</button>').join('');
+          const back = this.stepHistory.length > 1 ? '<div style="margin-top: 22px; padding-top: 16px; border-top: 1px solid #e5e7eb;"><button class="back-btn" onclick="tool.goBack()">← Back</button></div>' : '';
+          html += (
+            '<div class="question-container">' +
+              '<div class="question">' + stepData.question + code + '</div>' +
+              ctx +
+              '<div class="button-group">' + buttons + '</div>' +
+              back +
+            '</div>'
+          );
         } else if (stepData.type === 'result') {
           const docs = this.getDocsForOutcome(this.currentStep);
-
-          html += `
-            <div class="result">
-              <h3>🎯 ${stepData.title} ${stepData.codeSection ? `<span class="code-section">${stepData.codeSection}</span>` : ''}</h3>
-              <p>${stepData.description}</p>
-
-              <div class="result-controls">
-                <button class="restart-btn" onclick="tool.restart()">🔄 Start Over</button>
-                ${this.stepHistory.length > 1 ? `<button class="back-btn" onclick="tool.goBack()">← Back</button>` : ''}
-                ${docs.length ? `<button onclick="tool.downloadPacket()">⬇️ Download Packet (.zip)</button>` : ''}
-                ${docs.length ? `<button class="back-btn" onclick="tool.copyDocLinks()">Copy Links</button>` : ''}
-              </div>
-
-              ${docs.length ? `
-                <div class="doc-list">
-                  <h4>📎 Required / Helpful Documents</h4>
-                  ${docs.map(d => `
-                    <div class="doc-item">
-                      <div class="doc-meta">
-                        <div class="doc-title">${d.title}</div>
-                        <div class="doc-sub"><span class="pill">${d.type || 'doc'}</span> ${d.note ? `<span class="muted">• ${d.note}</span>` : ''}</div>
-                      </div>
-                      <div>
-                        <a href="${d.href}" target="_blank" rel="noopener"><button>Open</button></a>
-                      </div>
-                    </div>`).join('')}
-                </div>` : `
-                <div class="doc-list">
-                  <h4>📎 Documents</h4>
-                  <div class="doc-item"><div class="doc-meta"><div class="doc-title">No linked documents for this outcome yet.</div><div class="doc-sub">Add entries for "${this.currentStep}" in <code>documentsRegistry</code>.</div></div></div>
-                </div>`}
-            </div>`;
+          const code = stepData.codeSection ? ('<span class="code-section">' + stepData.codeSection + '</span>') : '';
+          const controls = (
+            '<div class="result-controls">' +
+              '<button class="restart-btn" onclick="tool.restart()">🔄 Start Over</button>' +
+              (this.stepHistory.length > 1 ? '<button class="back-btn" onclick="tool.goBack()">← Back</button>' : '') +
+              (docs.length ? '<button onclick="tool.downloadPacket()">⬇️ Download Packet (.zip)</button>' : '') +
+              (docs.length ? '<button class="back-btn" onclick="tool.copyDocLinks()">Copy Links</button>' : '') +
+            '</div>'
+          );
+          html += (
+            '<div class="result">' +
+              '<h3>🎯 ' + stepData.title + ' ' + code + '</h3>' +
+              '<p>' + stepData.description + '</p>' +
+              controls +
+              this.buildDocListHTML(docs) +
+            '</div>'
+          );
         }
 
         content.innerHTML = html;
@@ -238,7 +209,7 @@
 
       async handleAnswer(value) {
         const stepData = this.getStepData(this.currentStep);
-        const sel = stepData.options?.find(opt => opt.value === value);
+        const sel = (stepData.options || []).find(opt => opt.value === value);
         if (sel) {
           this.breadcrumb.push(sel.text);
           this.currentStep = sel.next;
@@ -266,75 +237,59 @@
         this.renderStep();
       }
 
-      // 🧾 Export a one-page printable summary (decision path + outcome)
       exportSummary() {
         const stepData = this.getStepData(this.currentStep);
         const docs = this.getDocsForOutcome(this.currentStep);
         const win = window.open('', '_blank');
-        const html = `
-          <html><head><title>Permitting Pathway Summary</title>
-          <style>
-            body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:24px;color:#111827}
-            h1{font-size:20px;margin:0 0 12px}
-            .muted{color:#6b7280}
-            .box{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:12px 0}
-            .pill{display:inline-block;border:1px solid #e5e7eb;border-radius:999px;padding:2px 8px;font-size:12px;margin-left:8px;color:#374151}
-            ul{margin:8px 0 0 20px}
-          </style></head>
-          <body>
-            <h1>Permitting Pathway – Decision Summary</h1>
-            <div class="box"><strong>Path Chosen:</strong><br/>${this.breadcrumb.join(' → ') || '—'}</div>
-            <div class="box"><strong>Outcome:</strong> ${stepData.title || '—'} ${stepData.codeSection ? `<span class="pill">${stepData.codeSection}</span>` : ''}<br><span class="muted">${stepData.description || ''}</span></div>
-            <div class="box"><strong>Documents (${docs.length})</strong>
-              ${docs.length ? `<ul>${docs.map(d => `<li>${d.title} – <span class="muted">${d.type || 'doc'}</span><br><a href='${d.href}' target='_blank'>${d.href}</a></li>`).join('')}</ul>` : 'No documents linked for this outcome yet.'}
-            </div>
-            <script>window.print()<\/script>
-          </body></html>`;
+        const docItems = docs.map(d => '<li>' + d.title + ' – <span class="muted">' + (d.type || 'doc') + '</span><br><a href="' + d.href + '" target="_blank">' + d.href + '</a></li>').join('');
+        const html = (
+          '<html><head><title>Permitting Pathway Summary</title>' +
+          '<style>body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:24px;color:#111827}h1{font-size:20px;margin:0 0 12px}.muted{color:#6b7280}.box{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:12px 0}.pill{display:inline-block;border:1px solid #e5e7eb;border-radius:999px;padding:2px 8px;font-size:12px;margin-left:8px;color:#374151}ul{margin:8px 0 0 20px}</style></head>' +
+          '<body>' +
+          '<h1>Permitting Pathway – Decision Summary</h1>' +
+          '<div class="box"><strong>Path Chosen:</strong><br/>' + (this.breadcrumb.join(' → ') || '—') + '</div>' +
+          '<div class="box"><strong>Outcome:</strong> ' + (stepData.title || '—') + (stepData.codeSection ? (' <span class="pill">' + stepData.codeSection + '</span>') : '') + '<br><span class="muted">' + (stepData.description || '') + '</span></div>' +
+          '<div class="box"><strong>Documents (' + docs.length + ')</strong>' + (docs.length ? ('<ul>' + docItems + '</ul>') : 'No documents linked for this outcome yet.') + '</div>' +
+          '<script>window.print()<\/script>' +
+          '</body></html>'
+        );
         win.document.write(html);
         win.document.close();
       }
 
-      // 📦 Bundle all linked docs for this result into a single ZIP
       async downloadPacket() {
         const docs = this.getDocsForOutcome(this.currentStep);
         if (!docs.length) return;
         if (!window.JSZip) { alert('ZIP library not loaded. Remove the button or include JSZip.'); return; }
-
         const zip = new JSZip();
         const folder = zip.folder('permitting-packet');
         const failures = [];
-
         await Promise.all(docs.map(async (d, idx) => {
           try {
             const res = await fetch(d.href, { mode: 'cors' });
             if (!res.ok) throw new Error(res.statusText);
             const blob = await res.blob();
-            const nameFromUrl = (new URL(d.href, window.location.href)).pathname.split('/').pop() || `doc-${idx+1}.pdf`;
-            folder.file(nameFromUrl, blob);
-          } catch (e) {
-            failures.push({ title: d.title, href: d.href, error: e.message });
-          }
+            const pathname = (new URL(d.href, window.location.href)).pathname;
+            const base = pathname.split('/').filter(Boolean).pop() || ('doc-' + (idx+1) + '.pdf');
+            folder.file(base, blob);
+          } catch (e) { failures.push({ title: d.title, href: d.href, error: e.message }); }
         }));
-
         const content = await zip.generateAsync({ type: 'blob' });
-        saveAs(content, `permitting-packet-${this.currentStep}.zip`);
-
+        saveAs(content, 'permitting-packet-' + this.currentStep + '.zip');
         if (failures.length) {
           console.warn('Some files could not be zipped due to CORS or network issues:', failures);
-          alert(`Downloaded packet with ${docs.length - failures.length} of ${docs.length} files. Some files could not be fetched (CORS). They remain available via individual links.`);
+          alert('Downloaded packet with ' + (docs.length - failures.length) + ' of ' + docs.length + ' files. Some files could not be fetched (CORS). They remain available via individual links.');
         }
       }
 
-      // 🔗 Copy plain URLs for quick sharing
       copyDocLinks() {
         const docs = this.getDocsForOutcome(this.currentStep);
         if (!docs.length) return;
-        const text = docs.map(d => `${d.title}: ${d.href}`).join('
+        const text = docs.map(d => d.title + ': ' + d.href).join('
 ');
         navigator.clipboard.writeText(text).then(() => alert('Document links copied to clipboard.'));
       }
 
-      // Decision tree data
       getStepData(step) {
         const steps = {
           'start': { type: 'question', question: 'Is the use allowed in this zone?', context: 'Check if use table shows anything other than "Not Permitted"', options: [
@@ -443,27 +398,19 @@
         return steps[step] || steps['start'];
       }
 
-      // Compose final list of docs for an outcome, including global requirements
       getDocsForOutcome(outcomeKey) {
-        let docs = [...(this.documentsRegistry[outcomeKey] || [])];
-
-        // Fee Schedule: for anything other than "Permitted by Right"
+        let docs = (this.documentsRegistry[outcomeKey] || []).slice();
         if (outcomeKey !== 'permitted_no_spar') {
           docs.push(this.commonDocs.feeSchedule);
         }
-
-        // CUP requirements (Minor & Standard)
         if (outcomeKey === 'minor_cup' || outcomeKey === 'standard_cup') {
           docs.push(this.commonDocs.generalApp);
           docs.push(this.commonDocs.cupChecklist);
           docs.push(this.commonDocs.envQuestionnaire);
         }
-        // Standard CUP adds Cost Recovery
         if (outcomeKey === 'standard_cup') {
           docs.push(this.commonDocs.costRecovery);
         }
-
-        // Deduplicate by href
         const seen = new Set();
         docs = docs.filter(d => { if (seen.has(d.href)) return false; seen.add(d.href); return true; });
         return docs;
