@@ -81,6 +81,12 @@
   <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 
   <script>
+    // surface JS errors in the UI so we don't stare at a blank box
+    window.addEventListener('error', function(e){
+      var c=document.getElementById('content');
+      if(c){ c.innerHTML = '<div style="background:#fff1f2;border:1px solid #fecdd3;border-radius:12px;padding:16px"><strong>JavaScript error:</strong> ' + (e.message||'') + '<br><small>' + (e.filename||'') + ':' + (e.lineno||'') + ':' + (e.colno||'') + '</small></div>'; }
+    }, true);
+
     class ZoningDecisionTool {
       constructor() {
         this.currentStep = 'start';
@@ -417,7 +423,12 @@
       }
     }
 
-    const tool = new ZoningDecisionTool();
+    try { window.tool = new ZoningDecisionTool(); }
+    catch(e){
+      var c=document.getElementById('content');
+      if(c){ c.innerHTML = '<div style="background:#fff1f2;border:1px solid #fecdd3;border-radius:12px;padding:16px"><strong>Init error:</strong> ' + e.message + '</div>'; }
+      console.error('Init error', e);
+    }
   </script>
 </body>
 </html>
