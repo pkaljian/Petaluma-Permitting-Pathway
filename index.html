@@ -84,73 +84,81 @@
     class ZoningDecisionTool {
       constructor() {
         this.currentStep = 'start';
-        this.breadcrumb = []; // human-readable selections
-        this.stepHistory = ['start']; // internal step ids
+        this.breadcrumb = [];
+        this.stepHistory = ['start'];
         this.currentStepNumber = 0;
 
-        // 🔗 Central registry mapping terminal/result steps to documents
-        // Replace the sample hrefs with your live files (local /docs/*.pdf, S3, City site, etc.)
+        // Global/common docs (maintained via city site so links stay evergreen)
+        this.commonDocs = {
+          generalApp: { title: 'General Application', href: 'https://cityofpetaluma.org/documents/planning-general-app/', type: 'form', note: 'Required for all CUPs (Minor & Standard)' },
+          costRecovery: { title: 'Cost Recovery Form', href: 'https://cityofpetaluma.org/documents/cost-recovery-form/', type: 'form', note: 'Required for Standard CUP' },
+          feeSchedule: { title: 'Planning Fee Schedule', href: 'https://cityofpetaluma.org/documents/planning-fee-schedule/', type: 'schedule', note: 'Applies to all outcomes other than Permitted by Right' },
+          cupChecklist: { title: 'Conditional Use Permit Application Checklist & Information Handout', href: 'https://cityofpetaluma.org/documents/conditional-use-permit-application-checklist-information-handout/', type: 'checklist' },
+          envQuestionnaire: { title: 'Environmental Impact Questionnaire', href: 'https://cityofpetaluma.org/documents/environmental-impact-questionnaire/', type: 'form' }
+        };
+
+        // Outcome-specific docs (you can keep adding/refining; common docs will be auto-added)
         this.documentsRegistry = {
           permitted_no_spar: [
-            { title: 'Building Permit Application', href: '/docs/building-permit-application.pdf', type: 'form', note: 'Submit to Building Division after plans are ready' },
-            { title: 'Submittal Checklist – Residential', href: '/docs/res-submittal-checklist.pdf', type: 'checklist' }
+            { title: 'Building Permit Application (example)', href: '/docs/building-permit-application.pdf', type: 'form', note: 'Submit to Building Division after plans are ready' },
+            { title: 'Submittal Checklist – Residential (example)', href: '/docs/res-submittal-checklist.pdf', type: 'checklist' }
           ],
           admin_spar: [
-            { title: 'Administrative SPAR Application', href: '/docs/admin-spar-application.pdf', type: 'form' },
-            { title: 'SPAR Findings Worksheet', href: '/docs/spar-findings-worksheet.pdf', type: 'worksheet' },
-            { title: 'Public Noticing Guide (FYI)', href: '/docs/noticing-guide.pdf', type: 'guide' }
+            { title: 'Administrative SPAR Application (example)', href: '/docs/admin-spar-application.pdf', type: 'form' },
+            { title: 'SPAR Findings Worksheet (example)', href: '/docs/spar-findings-worksheet.pdf', type: 'worksheet' },
+            { title: 'Public Noticing Guide (FYI, example)', href: '/docs/noticing-guide.pdf', type: 'guide' }
           ],
           pc_spar: [
-            { title: 'Planning Commission SPAR Application', href: '/docs/pc-spar-application.pdf', type: 'form' },
-            { title: 'Submittal Checklist – SPAR', href: '/docs/spar-submittal-checklist.pdf', type: 'checklist' },
-            { title: 'CEQA Initial Study Checklist (if applicable)', href: '/docs/ceqa-initial-study-checklist.pdf', type: 'form' }
+            { title: 'Planning Commission SPAR Application (example)', href: '/docs/pc-spar-application.pdf', type: 'form' },
+            { title: 'Submittal Checklist – SPAR (example)', href: '/docs/spar-submittal-checklist.pdf', type: 'checklist' },
+            { title: 'CEQA Initial Study Checklist (if applicable, example)', href: '/docs/ceqa-initial-study-checklist.pdf', type: 'form' }
           ],
           minor_cup: [
-            { title: 'Minor Use Permit Application', href: '/docs/minor-use-permit.pdf', type: 'form' },
-            { title: 'Findings Worksheet – CUP', href: '/docs/cup-findings-worksheet.pdf', type: 'worksheet' }
+            { title: 'Minor Use Permit Application (example)', href: '/docs/minor-use-permit.pdf', type: 'form' },
+            { title: 'Findings Worksheet – CUP (example)', href: '/docs/cup-findings-worksheet.pdf', type: 'worksheet' }
           ],
           standard_cup: [
-            { title: 'Conditional Use Permit Application', href: '/docs/cup-application.pdf', type: 'form' },
-            { title: 'Public Hearing Noticing Guide', href: '/docs/noticing-guide.pdf', type: 'guide' },
-            { title: 'Submittal Checklist – CUP', href: '/docs/cup-submittal-checklist.pdf', type: 'checklist' }
+            { title: 'Conditional Use Permit Application (example)', href: '/docs/cup-application.pdf', type: 'form' },
+            { title: 'Public Hearing Noticing Guide (example)', href: '/docs/noticing-guide.pdf', type: 'guide' },
+            { title: 'Submittal Checklist – CUP (example)', href: '/docs/cup-submittal-checklist.pdf', type: 'checklist' }
           ],
           admin_variance: [
-            { title: 'Administrative Variance Application', href: '/docs/admin-variance-application.pdf', type: 'form' },
-            { title: 'Variance Findings Worksheet', href: '/docs/variance-findings-worksheet.pdf', type: 'worksheet' }
+            { title: 'Administrative Variance Application (example)', href: '/docs/admin-variance-application.pdf', type: 'form' },
+            { title: 'Variance Findings Worksheet (example)', href: '/docs/variance-findings-worksheet.pdf', type: 'worksheet' }
           ],
           pc_variance: [
-            { title: 'Variance Application – PC', href: '/docs/pc-variance-application.pdf', type: 'form' },
-            { title: 'Submittal Checklist – Variance', href: '/docs/variance-submittal-checklist.pdf', type: 'checklist' }
+            { title: 'Variance Application – PC (example)', href: '/docs/pc-variance-application.pdf', type: 'form' },
+            { title: 'Submittal Checklist – Variance (example)', href: '/docs/variance-submittal-checklist.pdf', type: 'checklist' }
           ],
           business_license: [
-            { title: 'Business License Application', href: '/docs/business-license.pdf', type: 'form' },
-            { title: 'Zoning Clearance Form', href: '/docs/zoning-clearance.pdf', type: 'form' }
+            { title: 'Business License Application (example)', href: '/docs/business-license.pdf', type: 'form' },
+            { title: 'Zoning Clearance Form (example)', href: '/docs/zoning-clearance.pdf', type: 'form' }
           ],
           home_occupation: [
-            { title: 'Home Occupation Permit', href: '/docs/home-occupation-permit.pdf', type: 'form' },
-            { title: 'Section 7.060 Standards (Excerpt)', href: '/docs/sec-7-060-standards.pdf', type: 'standards' }
+            { title: 'Home Occupation Permit (example)', href: '/docs/home-occupation-permit.pdf', type: 'form' },
+            { title: 'Section 7.060 Standards (Excerpt, example)', href: '/docs/sec-7-060-standards.pdf', type: 'standards' }
           ],
           str_permit: [
-            { title: 'STR Permit Application', href: '/docs/str-permit.pdf', type: 'form' },
-            { title: 'TOT Certificate Application', href: '/docs/tot-certificate.pdf', type: 'form' }
+            { title: 'STR Permit Application (example)', href: '/docs/str-permit.pdf', type: 'form' },
+            { title: 'TOT Certificate Application (example)', href: '/docs/tot-certificate.pdf', type: 'form' }
           ],
           state_housing: [
-            { title: 'SB 9 Urban Lot Split/Two-Unit App', href: '/docs/sb9-application.pdf', type: 'form' },
-            { title: 'Objective Design Standards (ODS)', href: '/docs/objective-design-standards.pdf', type: 'standards' }
+            { title: 'SB 9 Urban Lot Split/Two-Unit App (example)', href: '/docs/sb9-application.pdf', type: 'form' },
+            { title: 'Objective Design Standards (ODS, example)', href: '/docs/objective-design-standards.pdf', type: 'standards' }
           ],
           other_ministerial: [
-            { title: 'Zoning Compliance Verification', href: '/docs/zoning-compliance-verification.pdf', type: 'form' }
+            { title: 'Zoning Compliance Verification (example)', href: '/docs/zoning-compliance-verification.pdf', type: 'form' }
           ],
           specific_regs_compliant: [
-            { title: 'Chapter 7 – Specific Use Regs (Excerpt)', href: '/docs/ch7-specific-use-regs.pdf', type: 'standards' }
+            { title: 'Chapter 7 – Specific Use Regs (Excerpt, example)', href: '/docs/ch7-specific-use-regs.pdf', type: 'standards' }
           ],
           zoning_compliance_required: [
-            { title: 'Zoning Compliance Worksheet', href: '/docs/zoning-compliance-worksheet.pdf', type: 'worksheet' },
-            { title: 'Chapter 7 – Specific Use Regs (Excerpt)', href: '/docs/ch7-specific-use-regs.pdf', type: 'standards' }
+            { title: 'Zoning Compliance Worksheet (example)', href: '/docs/zoning-compliance-worksheet.pdf', type: 'worksheet' },
+            { title: 'Chapter 7 – Specific Use Regs (Excerpt, example)', href: '/docs/ch7-specific-use-regs.pdf', type: 'standards' }
           ],
           not_permitted: [
-            { title: 'General Plan / Zoning Amendment Guide', href: '/docs/gp-zoning-amendment-guide.pdf', type: 'guide' },
-            { title: 'Pre-Application Meeting Request', href: '/docs/preapp-request.pdf', type: 'form' }
+            { title: 'General Plan / Zoning Amendment Guide (example)', href: '/docs/gp-zoning-amendment-guide.pdf', type: 'guide' },
+            { title: 'Pre-Application Meeting Request (example)', href: '/docs/preapp-request.pdf', type: 'form' }
           ]
         };
 
@@ -158,32 +166,6 @@
       }
 
       init() { this.renderStep(); }
-
-      // Compose final list of docs for an outcome, including global requirements
-      getDocsForOutcome(outcomeKey) {
-        let docs = [...(this.documentsRegistry[outcomeKey] || [])];
-
-        // Fee Schedule: for anything other than "Permitted by Right"
-        if (outcomeKey !== 'permitted_no_spar') {
-          docs.push(this.commonDocs.feeSchedule);
-        }
-
-        // CUP requirements (Minor & Standard)
-        if (outcomeKey === 'minor_cup' || outcomeKey === 'standard_cup') {
-          docs.push(this.commonDocs.generalApp);
-          docs.push(this.commonDocs.cupChecklist);
-          docs.push(this.commonDocs.envQuestionnaire);
-        }
-        // Standard CUP adds Cost Recovery
-        if (outcomeKey === 'standard_cup') {
-          docs.push(this.commonDocs.costRecovery);
-        }
-
-        // Deduplicate by href
-        const seen = new Set();
-        docs = docs.filter(d => { if (seen.has(d.href)) return false; seen.add(d.href); return true; });
-        return docs;
-      }
 
       renderStep() {
         const content = document.getElementById('content');
@@ -237,7 +219,7 @@
                     <div class="doc-item">
                       <div class="doc-meta">
                         <div class="doc-title">${d.title}</div>
-                        <div class="doc-sub"><span class="pill">${d.type}</span> ${d.note ? `<span class="muted">• ${d.note}</span>` : ''}</div>
+                        <div class="doc-sub"><span class="pill">${d.type || 'doc'}</span> ${d.note ? `<span class="muted">• ${d.note}</span>` : ''}</div>
                       </div>
                       <div>
                         <a href="${d.href}" target="_blank" rel="noopener"><button>Open</button></a>
@@ -304,7 +286,7 @@
             <div class="box"><strong>Path Chosen:</strong><br/>${this.breadcrumb.join(' → ') || '—'}</div>
             <div class="box"><strong>Outcome:</strong> ${stepData.title || '—'} ${stepData.codeSection ? `<span class="pill">${stepData.codeSection}</span>` : ''}<br><span class="muted">${stepData.description || ''}</span></div>
             <div class="box"><strong>Documents (${docs.length})</strong>
-              ${docs.length ? `<ul>${docs.map(d => `<li>${d.title} – <span class="muted">${d.type}</span><br><a href='${d.href}' target='_blank'>${d.href}</a></li>`).join('')}</ul>` : 'No documents linked for this outcome yet.'}
+              ${docs.length ? `<ul>${docs.map(d => `<li>${d.title} – <span class="muted">${d.type || 'doc'}</span><br><a href='${d.href}' target='_blank'>${d.href}</a></li>`).join('')}</ul>` : 'No documents linked for this outcome yet.'}
             </div>
             <script>window.print()<\/script>
           </body></html>`;
@@ -317,31 +299,11 @@
         const docs = this.getDocsForOutcome(this.currentStep);
         if (!docs.length) return;
         if (!window.JSZip) { alert('ZIP library not loaded. Remove the button or include JSZip.'); return; }
-        const zip = new JSZip();
-        const folder = zip.folder('permitting-packet');
-        const failures = [];
-        await Promise.all(docs.map(async (d, idx) => {
-          try {
-            const res = await fetch(d.href, { mode: 'cors' });
-            if (!res.ok) throw new Error(res.statusText);
-            const blob = await res.blob();
-            const nameFromUrl = (new URL(d.href, window.location.href)).pathname.split('/').pop() || `doc-${idx+1}.pdf`;
-            folder.file(nameFromUrl, blob);
-          } catch (e) { failures.push({ title: d.title, href: d.href, error: e.message }); }
-        }));
-        const content = await zip.generateAsync({ type: 'blob' });
-        saveAs(content, `permitting-packet-${this.currentStep}.zip`);
-        if (failures.length) {
-          console.warn('Some files could not be zipped due to CORS or network issues:', failures);
-          alert(`Downloaded packet with ${docs.length - failures.length} of ${docs.length} files. Some files could not be fetched (CORS). They remain available via individual links.`);
-        }
-      }
 
         const zip = new JSZip();
         const folder = zip.folder('permitting-packet');
         const failures = [];
 
-        // Try to fetch files (requires CORS-enabled sources). You can swap to server-side bundling if needed.
         await Promise.all(docs.map(async (d, idx) => {
           try {
             const res = await fetch(d.href, { mode: 'cors' });
@@ -359,7 +321,7 @@
 
         if (failures.length) {
           console.warn('Some files could not be zipped due to CORS or network issues:', failures);
-          alert(`Downloaded packet with ${docs.length - failures.length} of ${docs.length} files. ${failures.length} could not be fetched (CORS). They will remain accessible via the individual links.`);
+          alert(`Downloaded packet with ${docs.length - failures.length} of ${docs.length} files. Some files could not be fetched (CORS). They remain available via individual links.`);
         }
       }
 
@@ -370,10 +332,9 @@
         const text = docs.map(d => `${d.title}: ${d.href}`).join('
 ');
         navigator.clipboard.writeText(text).then(() => alert('Document links copied to clipboard.'));
-      }: ${d.href}`).join('\n');
-        navigator.clipboard.writeText(text).then(() => alert('Document links copied to clipboard.'));
       }
 
+      // Decision tree data
       getStepData(step) {
         const steps = {
           'start': { type: 'question', question: 'Is the use allowed in this zone?', context: 'Check if use table shows anything other than "Not Permitted"', options: [
@@ -481,9 +442,36 @@
         };
         return steps[step] || steps['start'];
       }
+
+      // Compose final list of docs for an outcome, including global requirements
+      getDocsForOutcome(outcomeKey) {
+        let docs = [...(this.documentsRegistry[outcomeKey] || [])];
+
+        // Fee Schedule: for anything other than "Permitted by Right"
+        if (outcomeKey !== 'permitted_no_spar') {
+          docs.push(this.commonDocs.feeSchedule);
+        }
+
+        // CUP requirements (Minor & Standard)
+        if (outcomeKey === 'minor_cup' || outcomeKey === 'standard_cup') {
+          docs.push(this.commonDocs.generalApp);
+          docs.push(this.commonDocs.cupChecklist);
+          docs.push(this.commonDocs.envQuestionnaire);
+        }
+        // Standard CUP adds Cost Recovery
+        if (outcomeKey === 'standard_cup') {
+          docs.push(this.commonDocs.costRecovery);
+        }
+
+        // Deduplicate by href
+        const seen = new Set();
+        docs = docs.filter(d => { if (seen.has(d.href)) return false; seen.add(d.href); return true; });
+        return docs;
+      }
     }
 
     const tool = new ZoningDecisionTool();
   </script>
 </body>
 </html>
+
