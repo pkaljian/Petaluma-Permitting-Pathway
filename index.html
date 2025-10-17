@@ -159,6 +159,32 @@
 
       init() { this.renderStep(); }
 
+      // Compose final list of docs for an outcome, including global requirements
+      getDocsForOutcome(outcomeKey) {
+        let docs = [...(this.documentsRegistry[outcomeKey] || [])];
+
+        // Fee Schedule: for anything other than "Permitted by Right"
+        if (outcomeKey !== 'permitted_no_spar') {
+          docs.push(this.commonDocs.feeSchedule);
+        }
+
+        // CUP requirements (Minor & Standard)
+        if (outcomeKey === 'minor_cup' || outcomeKey === 'standard_cup') {
+          docs.push(this.commonDocs.generalApp);
+          docs.push(this.commonDocs.cupChecklist);
+          docs.push(this.commonDocs.envQuestionnaire);
+        }
+        // Standard CUP adds Cost Recovery
+        if (outcomeKey === 'standard_cup') {
+          docs.push(this.commonDocs.costRecovery);
+        }
+
+        // Deduplicate by href
+        const seen = new Set();
+        docs = docs.filter(d => { if (seen.has(d.href)) return false; seen.add(d.href); return true; });
+        return docs;
+      }
+
       renderStep() {
         const content = document.getElementById('content');
         const stepData = this.getStepData(this.currentStep);
@@ -190,7 +216,7 @@
               ${this.stepHistory.length > 1 ? `<div style="margin-top: 22px; padding-top: 16px; border-top: 1px solid #e5e7eb;"><button class="back-btn" onclick="tool.goBack()">← Back</button></div>` : ''}
             </div>`;
         } else if (stepData.type === 'result') {
-          const docs = this.documentsRegistry[this.currentStep] || [];
+          const docs = this.getDocsForOutcome(this.currentStep);
 
           html += `
             <div class="result">
@@ -261,7 +287,7 @@
       // 🧾 Export a one-page printable summary (decision path + outcome)
       exportSummary() {
         const stepData = this.getStepData(this.currentStep);
-        const docs = this.documentsRegistry[this.currentStep] || [];
+        const docs = this.getDocsForOutcome(this.currentStep);
         const win = window.open('', '_blank');
         const html = `
           <html><head><title>Permitting Pathway Summary</title>
@@ -288,9 +314,28 @@
 
       // 📦 Bundle all linked docs for this result into a single ZIP
       async downloadPacket() {
-        const docs = this.documentsRegistry[this.currentStep] || [];
+        const docs = this.getDocsForOutcome(this.currentStep);
         if (!docs.length) return;
         if (!window.JSZip) { alert('ZIP library not loaded. Remove the button or include JSZip.'); return; }
+        const zip = new JSZip();
+        const folder = zip.folder('permitting-packet');
+        const failures = [];
+        await Promise.all(docs.map(async (d, idx) => {
+          try {
+            const res = await fetch(d.href, { mode: 'cors' });
+            if (!res.ok) throw new Error(res.statusText);
+            const blob = await res.blob();
+            const nameFromUrl = (new URL(d.href, window.location.href)).pathname.split('/').pop() || `doc-${idx+1}.pdf`;
+            folder.file(nameFromUrl, blob);
+          } catch (e) { failures.push({ title: d.title, href: d.href, error: e.message }); }
+        }));
+        const content = await zip.generateAsync({ type: 'blob' });
+        saveAs(content, `permitting-packet-${this.currentStep}.zip`);
+        if (failures.length) {
+          console.warn('Some files could not be zipped due to CORS or network issues:', failures);
+          alert(`Downloaded packet with ${docs.length - failures.length} of ${docs.length} files. Some files could not be fetched (CORS). They remain available via individual links.`);
+        }
+      }
 
         const zip = new JSZip();
         const folder = zip.folder('permitting-packet');
@@ -320,9 +365,12 @@
 
       // 🔗 Copy plain URLs for quick sharing
       copyDocLinks() {
-        const docs = this.documentsRegistry[this.currentStep] || [];
+        const docs = this.getDocsForOutcome(this.currentStep);
         if (!docs.length) return;
-        const text = docs.map(d => `${d.title}: ${d.href}`).join('\n');
+        const text = docs.map(d => `${d.title}: ${d.href}`).join('
+');
+        navigator.clipboard.writeText(text).then(() => alert('Document links copied to clipboard.'));
+      }: ${d.href}`).join('\n');
         navigator.clipboard.writeText(text).then(() => alert('Document links copied to clipboard.'));
       }
 
@@ -438,6 +486,4 @@
     const tool = new ZoningDecisionTool();
   </script>
 </body>
-</html>
-
 </html>
